@@ -8,32 +8,35 @@ public class ObjectController : MonoBehaviour
     {
 
         fire,
-        circular,
+        rotate,
 
     }
     public Rigidbody rigidbodyObject;
-    public GameObject cube;
-    public GameObject cubeChild;
     Vector3 clickPosition = -Vector3.one;
     RaycastHit hit;
     Ray ray;
-    public const float speed = 0.2f;
+    public GameObject parentObject;
+    public float moveSpeed;
+    public bool move;
 
-    public bool asd = false;
+    void Awake()
+    {
+
+        move = true;
+        moveSpeed = 0.1f;
+        parentObject.SetActive(false);
+    }
     void Update()
     {
 
-        if (asd)
-        {
 
-            rigidbodyObject.AddForce(cubeChild.transform.forward * 0.02f);
-        }
+
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-            asd = false;
-            cube.GetComponent<TransformController>().isRotate = true;
 
+            parentObject.transform.rotation = Quaternion.Euler(transform.eulerAngles);
+            move = false;
             clickPosition = -Vector3.one;
 
 
@@ -42,11 +45,13 @@ public class ObjectController : MonoBehaviour
 
             if (Physics.Raycast(ray, out hit))
             {
-                clickPosition = hit.point;
 
-                if (hit.transform.tag == "terrain")
+                clickPosition = hit.point;
+                if (hit.transform != null)
                 {
-                    cube.transform.position = clickPosition;
+
+                    parentObject.SetActive(true);
+                    parentObject.transform.position = clickPosition;
                 }
             }
         }
@@ -54,23 +59,28 @@ public class ObjectController : MonoBehaviour
         if (Input.GetKey(KeyCode.Mouse0))
         {
 
-            transform.position = Vector3.MoveTowards(transform.position, cubeChild.transform.position, speed);
+            transform.SetParent(parentObject.transform);
+            // transform.rotation =Quaternion.Euler(parentObject.transform.eulerAngles);
         }
-        if (Input.GetKey(KeyCode.U))
+        if (Input.GetKeyUp(KeyCode.Mouse0))
         {
 
-            rigidbodyObject.velocity = Vector3.zero;
+            transform.rotation = Quaternion.Euler(parentObject.transform.eulerAngles);
+            transform.SetParent(null);
+            parentObject.SetActive(false);
+            move = true;
         }
-
     }
     void FixedUpdate()
     {
-
-        if (Input.GetKeyUp(KeyCode.Mouse0))
+        if (move)
         {
-            rigidbodyObject.velocity = Vector3.one;
-            cube.GetComponent<TransformController>().isRotate = false;
-            asd = true;
+            rigidbodyObject.AddForce(transform.forward * moveSpeed);
+        }
+        else
+        {
+
+            rigidbodyObject.velocity = Vector3.zero;
         }
     }
 }
